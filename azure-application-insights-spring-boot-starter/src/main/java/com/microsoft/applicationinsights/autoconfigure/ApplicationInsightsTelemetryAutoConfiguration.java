@@ -28,6 +28,7 @@ import com.microsoft.applicationinsights.TelemetryConfiguration;
 import com.microsoft.applicationinsights.autoconfigure.ApplicationInsightsProperties.Channel.InProcess;
 import com.microsoft.applicationinsights.autoconfigure.conditionals.InstrumentationKeyCondition;
 import com.microsoft.applicationinsights.channel.TelemetryChannel;
+import com.microsoft.applicationinsights.channel.TelemetrySampler;
 import com.microsoft.applicationinsights.channel.concrete.inprocess.InProcessTelemetryChannel;
 import com.microsoft.applicationinsights.exceptions.IllegalConfigurationException;
 import com.microsoft.applicationinsights.extensibility.ContextInitializer;
@@ -186,6 +187,14 @@ public class ApplicationInsightsTelemetryAutoConfiguration {
         } else {
             channel = new InProcessTelemetryChannel(configuration, String.valueOf(inProcess.getMaxTransmissionStorageFilesCapacityInMb()), inProcess.isDeveloperMode(), inProcess.getMaxTelemetryBufferCapacity(),
                     inProcess.getFlushIntervalInSeconds(), inProcess.isThrottling(), inProcess.getMaxInstantRetry());
+        }
+
+        ApplicationInsightsProperties.TelemetryProcessor.Sampling samplingSettings
+                = applicationInsightsProperties.getTelemetryProcessor().getSampling();
+
+        if (samplingSettings.isEnabled() || samplingSettings.getAdaptive().isEnabled()) {
+            TelemetrySampler telemetrySampler = new TelemetrySamplerInitializer().getSampler(samplingSettings);
+            channel.setSampler(telemetrySampler);
         }
 
         configuration.setChannel(channel);

@@ -298,7 +298,9 @@ public class ApplicationInsightsProperties {
       this.sampling = sampling;
     }
 
-    static class Sampling {
+    static class Sampling  {
+
+      private Adaptive adaptiveSampling = new Adaptive();
 
       private boolean enabled = false;
 
@@ -312,6 +314,10 @@ public class ApplicationInsightsProperties {
       private List<String> include = new ArrayList<>();
       /** If set telemetry of specified type will be excluded. */
       private List<String> exclude = new ArrayList<>();
+
+      public Adaptive getAdaptive() {
+        return adaptiveSampling;
+      }
 
       public boolean isEnabled() {
         return enabled;
@@ -343,6 +349,91 @@ public class ApplicationInsightsProperties {
 
       public void setExclude(List<String> exclude) {
         this.exclude = exclude;
+      }
+
+      static class Adaptive
+      {
+        private boolean enabled = false;
+        private int maxTelemetryItemsPerSecond = 100;
+        private double movingAverageRatio = 0.25;
+        private int evaluationIntervalInSec = 120;
+        private int minSamplingPercentage = 1 ;
+        private int initialSamplingPercentage = 100;
+        private int maxSamplingPercentage= 100;
+        private int samplingPercentageIncreaseTimeoutInSec = 120;
+        private int samplingPercentageDecreaseTimeoutInSec = 900;
+
+        public boolean isEnabled() {
+          return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+          this.enabled = enabled;
+        }
+
+        public int getMaxTelemetryItemsPerSecond() {
+          return maxTelemetryItemsPerSecond;
+        }
+
+        public void setMaxTelemetryItemsPerSecond(int maxTelemetryItemsPerSecond) {
+          this.maxTelemetryItemsPerSecond = maxTelemetryItemsPerSecond;
+        }
+
+        public double getMovingAverageRatio() {
+          return movingAverageRatio;
+        }
+
+        public void setMovingAverageRatio(double movingAverageRatio) {
+          this.movingAverageRatio = movingAverageRatio;
+        }
+
+        public int getEvaluationIntervalInSec() {
+          return evaluationIntervalInSec;
+        }
+
+        public void setEvaluationIntervalInSec(int evaluationIntervalInSec) {
+          this.evaluationIntervalInSec = evaluationIntervalInSec;
+        }
+
+        public int getMinSamplingPercentage() {
+          return minSamplingPercentage;
+        }
+
+        public void setMinSamplingPercentage(int minSamplingPercentage) {
+          this.minSamplingPercentage = minSamplingPercentage;
+        }
+
+        public int getInitialSamplingPercentage() {
+          return initialSamplingPercentage;
+        }
+
+        public void setInitialSamplingPercentage(int initialSamplingPercentage) {
+          this.initialSamplingPercentage = initialSamplingPercentage;
+        }
+
+        public int getMaxSamplingPercentage() {
+          return maxSamplingPercentage;
+        }
+
+        public void setMaxSamplingPercentage(int maxSamplingPercentage) {
+          this.maxSamplingPercentage = maxSamplingPercentage;
+        }
+
+        public int getSamplingPercentageIncreaseTimeoutInSec() {
+          return samplingPercentageIncreaseTimeoutInSec;
+        }
+
+        public void setSamplingPercentageIncreaseTimeoutInSec(int samplingPercentageIncreaseTimeoutInSec) {
+          this.samplingPercentageIncreaseTimeoutInSec = samplingPercentageIncreaseTimeoutInSec;
+        }
+
+        public int getSamplingPercentageDecreaseTimeoutInSec() {
+          return samplingPercentageDecreaseTimeoutInSec;
+        }
+
+        public void setSamplingPercentageDecreaseTimeoutInSec(int samplingPercentageDecreaseTimeoutInSec) {
+          this.samplingPercentageDecreaseTimeoutInSec = samplingPercentageDecreaseTimeoutInSec;
+        }
       }
     }
   }

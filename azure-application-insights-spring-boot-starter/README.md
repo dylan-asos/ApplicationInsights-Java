@@ -152,6 +152,8 @@ azure.application-insights.channel.in-process.max-transmission-storage-files-cap
 # Enable/Disable throttling on sending telemetry data. Default value: true.
 azure.application-insights.channel.in-process.throttling=true
 
+# Enable/Disable sampling. Default value: false
+azure.application-insights.telemetry-processor.sampling.enabled=false
 # Percent of telemetry events that will be sent to Application Insights. Percentage must be close to 100/N where N is an integer.
 # E.g. 50 (=100/2), 33.33 (=100/3), 25 (=100/4), 20, 1 (=100/100), 0.1 (=100/1000). Default value: 100 (all telemetry events).
 azure.application-insights.telemetry-processor.sampling.percentage=100
@@ -159,6 +161,25 @@ azure.application-insights.telemetry-processor.sampling.percentage=100
 azure.application-insights.telemetry-processor.sampling.include=
 # If set telemetry of specified type will be excluded. Default value: none telemetries are excluded.
 azure.application-insights.telemetry-processor.sampling.exclude=
+
+# Enable/Disable adaptive sampling. Default value: false
+azure.application-insights.telemetry-processor.sampling.adaptive.enabled=false
+# The target rate that the adaptive algorithm aims for on each server host. If your web app runs on many hosts, reduce this value so as to remain within your target rate of traffic at the Application Insights service.
+azure.application-insights.telemetry-processor.sampling.adaptive.max-telemetry-items-per-second=100
+#The interval at which the current rate of telemetry is reevaluated. Evaluation is performed as a moving average. You might want to shorten this interval if your telemetry is liable to sudden bursts.
+azure.application-insights.telemetry-processor.sampling.adaptive.evaluation-interval-in-sec=120
+# As sampling percentage varies, what is the minimum value we're allowed to set? Default value: 1
+azure.application-insights.telemetry-processor.sampling.adaptive.min-sampling-percentage=1
+# As sampling percentage varies, what is the maximum value we're allowed to set? Default value: 100
+azure.application-insights.telemetry-processor.sampling.adaptive.max-sampling-percentage=100
+# The amount of telemetry to sample when the app has just started. Default value: 100
+azure.application-insights.telemetry-processor.sampling.adaptive.initial-sampling-percentage=100
+# When sampling percentage value changes, how soon after are we allowed to increase the sampling percentage again to capture more data? Default value: 120 seconds
+azure.application-insights.telemetry-processor.sampling.adaptive.sampling-percentage-increase-timeout-in-sec=120
+# When sampling percentage value changes, how soon after are we allowed to lower the sampling percentage again to capture less data?. Default value: 900 seconds
+azure.application-insights.telemetry-processor.sampling.adaptive.sampling-percentage-decrease-timeout-in-sec=900
+# In the calculation of the moving average, this specifies the weight that should be assigned to the most recent value. Use a value equal to or less than 1. Smaller values make the algorithm less reactive to sudden changes. Default value: 0.25
+azure.application-insights.telemetry-processor.sampling.adaptive.moving-average-ratio=0.25
 
 # Enable/Disable default telemetry modules. Default value: true.
 azure.application-insights.default-modules.ProcessPerformanceCountersModule.enabled=true

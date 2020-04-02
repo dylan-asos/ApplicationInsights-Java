@@ -169,24 +169,4 @@ class ApplicationInsightsModuleConfiguration {
                 + " to false ", e);
         }
     }
-
-    /**
-     * Bean for FixedRateSamplingTelemetryProcessor. This bean helps in configuring the fixed rate sampling.
-     * @return instance of {@link FixedRateSamplingTelemetryProcessor}
-     */
-    @Bean
-    @ConditionalOnProperty(value = "azure.application-insights.telemetry-processor.sampling.enabled", havingValue = "true")
-    TelemetryProcessor fixedRateSamplingTelemetryProcessor() {
-        Sampling sampling = applicationInsightsProperties.getTelemetryProcessor().getSampling();
-        FixedRateSamplingTelemetryProcessor processor = new FixedRateSamplingTelemetryProcessor();
-        processor.setSamplingPercentage(String.valueOf(sampling.getPercentage()));
-        for (String include : sampling.getInclude()) {
-            processor.addToIncludedType(include);
-        }
-        for (String exclude : sampling.getExclude()) {
-            processor.addToExcludedType(exclude);
-        }
-        return processor;
-    }
-
 }

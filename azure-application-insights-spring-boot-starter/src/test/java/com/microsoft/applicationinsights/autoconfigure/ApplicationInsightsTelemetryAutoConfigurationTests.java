@@ -32,6 +32,8 @@ import com.microsoft.applicationinsights.extensibility.ContextInitializer;
 import com.microsoft.applicationinsights.extensibility.TelemetryInitializer;
 import com.microsoft.applicationinsights.extensibility.TelemetryModule;
 import com.microsoft.applicationinsights.extensibility.TelemetryProcessor;
+import com.microsoft.applicationinsights.internal.channel.sampling.AdaptiveTelemetrySampler;
+import com.microsoft.applicationinsights.internal.channel.sampling.FixedRateTelemetrySampler;
 import com.microsoft.applicationinsights.internal.channel.samplingV2.FixedRateSamplingTelemetryProcessor;
 import com.microsoft.applicationinsights.internal.heartbeat.HeartBeatModule;
 import com.microsoft.applicationinsights.internal.logger.InternalLogger;
@@ -184,25 +186,63 @@ public final class ApplicationInsightsTelemetryAutoConfigurationTests {
         assertThat(channel).extracting("telemetryBuffer").extracting("transmitBufferTimeoutInSeconds").contains(123);
         assertThat(channel).extracting("telemetryBuffer").extracting("maxTelemetriesInBatch").contains(10);
     }
-    
+
     @Test
-    public void shouldBeAbleToConfigureSamplingTelemetryProcessor() {
+    public void shouldBeAbleToConfigureFixedSampling() throws NoSuchFieldException, IllegalAccessException {
         EnvironmentTestUtils.addEnvironment(context,
                 "azure.application-insights.instrumentation-key: 00000000-0000-0000-0000-000000000000",
                 "azure.application-insights.telemetry-processor.sampling.percentage=50",
                 "azure.application-insights.telemetry-processor.sampling.include=Request",
-            "azure.application-insights.telemetry-processor.sampling.enabled=true");
+                "azure.application-insights.telemetry-processor.sampling.enabled=true");
         context.register(PropertyPlaceholderAutoConfiguration.class,
                 ApplicationInsightsTelemetryAutoConfiguration.class);
         context.refresh();
 
         TelemetryConfiguration telemetryConfiguration = context.getBean(TelemetryConfiguration.class);
-        FixedRateSamplingTelemetryProcessor fixedRateSamplingTelemetryProcessor = context.getBean(FixedRateSamplingTelemetryProcessor.class);
+        TelemetryChannel channel = telemetryConfiguration.getChannel();
 
-        assertThat(telemetryConfiguration.getTelemetryProcessors()).extracting("class").contains(FixedRateSamplingTelemetryProcessor.class);
-        assertThat(fixedRateSamplingTelemetryProcessor).extracting("samplingPercentage").contains(50.);
-        assertThat(fixedRateSamplingTelemetryProcessor.getIncludedTypes()).contains(RequestTelemetry.class);
-        assertThat(fixedRateSamplingTelemetryProcessor.getExcludedTypes()).isEmpty();
+        Field field = TelemetryChannelBase.class.getDeclaredField("telemetrySampler");
+        field.setAccessible(true);
+
+        FixedRateTelemetrySampler sampler = (FixedRateTelemetrySampler)field.get(channel);
+
+        assertThat(sampler).extracting("samplingPercentage").contains(50.);
+        assertThat(sampler.getIncludeTypes()).contains(RequestTelemetry.class);
+        assertThat(sampler.getExcludeTypes()).isEmpty();
+    }
+
+    @Test
+    public void shouldBeAbleToConfigureAdaptiveSampling() throws Exception {
+        EnvironmentTestUtils.addEnvironment(context,
+                "azure.application-insights.instrumentation-key: 00000000-0000-0000-0000-000000000000",
+                "azure.application-insights.telemetry-processor.sampling.adaptive.max-telemetry-items-per-second=5",
+                "azure.application-insights.telemetry-processor.sampling.adaptive.evaluation-interval-in-sec=5",
+                "azure.application-insights.telemetry-processor.sampling.adaptive.min-sampling-percentage=10",
+                "azure.application-insights.telemetry-processor.sampling.adaptive.max-sampling-percentage=20",
+                "azure.application-insights.telemetry-processor.sampling.adaptive.initial-sampling-percentage=50",
+                "azure.application-insights.telemetry-processor.sampling.adaptive.sampling-percentage-increase-timeout-in-sec=20",
+                "azure.application-insights.telemetry-processor.sampling.adaptive.sampling-percentage-decrease-timeout-in-sec=40",
+                "azure.application-insights.telemetry-processor.sampling.include=Request",
+                "azure.application-insights.telemetry-processor.sampling.enabled=true",
+                "azure.application-insights.telemetry-processor.sampling.adaptive.enabled=true");
+        context.register(PropertyPlaceholderAutoConfiguration.class,
+                ApplicationInsightsTelemetryAutoConfiguration.class);
+        context.refresh();
+
+        TelemetryConfiguration telemetryConfiguration = context.getBean(TelemetryConfiguration.class);
+        TelemetryChannel channel = telemetryConfiguration.getChannel();
+
+        Field field = TelemetryChannelBase.class.getDeclaredField("telemetrySampler");
+        field.setAccessible(true);
+
+        AdaptiveTelemetrySampler sampler = (AdaptiveTelemetrySampler)field.get(channel);
+
+        assertThat(sampler).extracting("maxTelemetriesPerSecond").contains(5.0);
+        assertThat(sampler).extracting("evaluationIntervalInSec").contains(5);
+        assertThat(sampler).extracting("samplingPercentageDecreaseTimeoutInSec").contains(40);
+        assertThat(sampler).extracting("samplingPercentageIncreaseTimeoutInSec").contains(20);
+        assertThat(sampler).extracting("minSamplingPercentage").contains(10);
+        assertThat(sampler).extracting("maxSamplingPercentage").contains(20);
     }
 
     @Test
